@@ -51,9 +51,9 @@
 </head>
 <body>
     <div id="topBar">
-        <a href="#home" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Home</a> <!-- New link -->
-        <a href="#about" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">About</a> <!-- New link -->
-        <a href="#store" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Store</a> <!-- Updated link -->
+        <a href="https://tahapen.netlify.app/#home" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Home</a> <!-- Updated link -->
+        <a href="https://tahapen.netlify.app/#about" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">About</a> <!-- Updated link -->
+        <a href="https://tahapen.netlify.app/#store" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Store</a> <!-- Updated link -->
     </div> <!-- New top bar -->
     <canvas id="canvas"></canvas>
     <div id="overlay" style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 160px; transition: opacity 0.1s; opacity: 1; z-index: 10;">
@@ -69,7 +69,7 @@
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext("2d");
         context.imageSmoothingEnabled = true; // Enable image smoothing
-        const currentFrame = index => `./render120/${index.toString().padStart(4, '0')}.webp`;
+        const currentFrame = index => `./not4k/${index.toString().padStart(4, '0')}.webp`;
         const frameCount = 143;
         const html = document.documentElement;
         let currentFrameIndex = 1;
@@ -236,4 +236,3 @@
     const analytics = getAnalytics(app);
   </script>
 </html>
-
