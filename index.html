@@ -51,9 +51,9 @@
 </head>
 <body>
     <div id="topBar">
-        <a href="https://tahapen.netlify.app/#home" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Home</a> <!-- Updated link -->
-        <a href="https://tahapen.netlify.app/#about" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">About</a> <!-- Updated link -->
-        <a href="https://tahapen.netlify.app/#store" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Store</a> <!-- Updated link -->
+        <a href="index.html" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Home</a> <!-- Updated link -->
+        <a href="about.html" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">About</a> <!-- Updated link -->
+        <a href="store.html" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Store</a> <!-- Updated link -->
     </div> <!-- New top bar -->
     <canvas id="canvas"></canvas>
     <div id="overlay" style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 160px; transition: opacity 0.1s; opacity: 1; z-index: 10;">
@@ -61,14 +61,15 @@
     </div>
     <!-- New message to display at the bottom -->
     <div id="endMessage" style="display: none; text-align: center; color: rgba(255, 255, 255, 0.465); font-size: 18px; position: fixed; bottom: 20px; width: 100%; z-index: 200; font-family: 'Trebuchet MS', sans-serif;">
-        FIN. <br>
-        Find out more at the <a href="#store" style="color: rgba(255, 255, 255, 0.172); text-decoration: underline;">Store</a>.
+        FIN. (this is version 1.0 mobile version coming soon) <br>
+        Find out more at the <a href="store.html" style="color: rgba(255, 255, 255, 0.172); text-decoration: underline;">Store</a>.
     </div>
     <script>
         console.log('Script started');
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext("2d");
         context.imageSmoothingEnabled = true; // Enable image smoothing
+        context.imageSmoothingQuality = 'high';
         const currentFrame = index => `./not4k/${index.toString().padStart(4, '0')}.webp`;
         const frameCount = 143;
         const html = document.documentElement;
@@ -76,70 +77,49 @@
         const img = new Image();
 
         const updateImage = index => {
-            img.src = currentFrame(index);
-            img.onload = function() {
-                // Set canvas size to the image size for high resolution
-                canvas.width = img.width; // {{ edit_1 }}
-                canvas.height = img.height; // {{ edit_2 }}
+    img.src = currentFrame(index);
+    img.onload = function() {
+        canvas.width = window.innerWidth * 2; // Double the resolution
+        canvas.height = window.innerHeight * 2; // Double the resolution
+        drawImageCovered(img, context, canvas.width, canvas.height);
+        document.getElementById('spinner').style.display = 'none';
+    };
+};
 
-                context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-
-                // Calculate aspect ratio
-                const imgAspectRatio = img.width / img.height;
-                const canvasAspectRatio = canvas.width / canvas.height;
-
-                let drawWidth, drawHeight, offsetX, offsetY;
-
-                if (imgAspectRatio > canvasAspectRatio) {
-                    // Image is wider than canvas
-                    drawHeight = canvas.height;
-                    drawWidth = img.width * (canvas.height / img.height);
-                    offsetX = (canvas.width - drawWidth) / 2;
-                    offsetY = 0;
-                } else {
-                    // Image is taller than canvas
-                    drawWidth = canvas.width;
-                    drawHeight = img.height * (canvas.width / img.width);
-                    offsetX = 0;
-                    offsetY = (canvas.height - drawHeight) / 2;
-                }
-
-                context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-            };
-        };
 
         img.onerror = function() {
             console.error('Error loading image:', img.src);
         };
 
         function drawImageCovered(img, ctx, canvas_width, canvas_height) {
-            const imgRatio = img.width / img.height;
-            const canvasRatio = canvas_width / canvas_height;
-            let drawWidth, drawHeight, offsetX, offsetY;
-            if (imgRatio > canvasRatio) {
-                drawHeight = canvas_height;
-                drawWidth = img.width * (canvas_height / img.height);
-                offsetX = (canvas_width - drawWidth) / 2;
-                offsetY = 0;
-            } else {
-                drawWidth = canvas_width;
-                drawHeight = img.height * (canvas_width / img.width);
-                offsetX = 0;
-                offsetY = (canvas_height - drawHeight) / 2;
-            }
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.clearRect(0, 0, canvas_width, canvas_height);
-            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-        }
+    const imgRatio = img.width / img.height;
+    const canvasRatio = canvas_width / canvas_height;
+    let drawWidth, drawHeight, offsetX, offsetY;
+    if (imgRatio > canvasRatio) {
+        drawHeight = canvas_height;
+        drawWidth = img.width * (canvas_height / img.height);
+        offsetX = (canvas_width - drawWidth) / 2;
+        offsetY = 0;
+    } else {
+        drawWidth = canvas_width;
+        drawHeight = img.height * (canvas_width / img.width);
+        offsetX = 0;
+        offsetY = (canvas_height - drawHeight) / 2;
+    }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, canvas_width, canvas_height);
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+}
 
-        const resizeCanvas = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            if (img.complete) {
-                drawImageCovered(img, context, canvas.width, canvas.height);
-            }
-        };
+
+const resizeCanvas = () => {
+    canvas.width = window.innerWidth * 2;
+    canvas.height = window.innerHeight * 2;
+    if (img.complete) {
+        drawImageCovered(img, context, canvas.width, canvas.height);
+    }
+};
 
         window.addEventListener('resize', resizeCanvas);
 
@@ -212,27 +192,4 @@
         console.log('Script completed');
     </script>
 </body>
-<script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
-  
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-    const firebaseConfig = {
-      apiKey: "AIzaSyCRt-n7Rz5aQxBdXbTimWLp9fXTvAv7WxY",
-      authDomain: "tahamportfolio.firebaseapp.com",
-      projectId: "tahamportfolio",
-      storageBucket: "tahamportfolio.appspot.com",
-      messagingSenderId: "779853393881",
-      appId: "1:779853393881:web:c560f35ab8c76912f7b3c8",
-      measurementId: "G-8RWK7NQF9J"
-    };
-  
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-  </script>
 </html>
