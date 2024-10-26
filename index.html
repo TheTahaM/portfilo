@@ -51,9 +51,9 @@
 </head>
 <body>
     <div id="topBar">
-        <a href="/index.html" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Home</a> <!-- Updated link -->
-        <a href="/about.html" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">About</a> <!-- Updated link -->
-        <a href="/store.html" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Store</a> <!-- Updated link -->
+        <a href="/index.html" aria-label="Go to Home" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Home</a> <!-- Updated link -->
+        <a href="/about.html" aria-label="Learn more about me" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">About</a> <!-- Updated link -->
+        <a href="/store.html" aria-label="Visit my Store" style="color: rgba(255, 255, 255, 0.577); margin: 0 15px; text-decoration: none;">Store</a> <!-- Updated link -->
     </div> <!-- New top bar -->
     <canvas id="canvas"></canvas>
     <div id="overlay" style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 160px; transition: opacity 0.1s; opacity: 1; z-index: 10;">
@@ -62,7 +62,7 @@
     <!-- New message to display at the bottom -->
     <div id="endMessage" style="display: none; text-align: center; color: rgba(255, 255, 255, 0.465); font-size: 18px; position: fixed; bottom: 20px; width: 100%; z-index: 200; font-family: 'Trebuchet MS', sans-serif;">
         FIN. (this is version 1.0 mobile version coming soon) <br>
-        Find out more at the <a href="store.html" style="color: rgba(255, 255, 255, 0.172); text-decoration: underline;">Store</a>.
+        Find out more at the <a href="store.html" style="color: rgba(255, 255, 255, 0.172); text-decoration: underline;">store</a> or learn<a href="/about.html" aria-label="Learn more about me" style="color: rgba(255, 255, 255, 0.172); text-decoration: underline;"> about</a> me
     </div>
     <script>
         console.log('Script started');
@@ -76,19 +76,44 @@
         let currentFrameIndex = 1;
         const img = new Image();
 
+        const imageQueue = []; // Queue to hold images to be loaded
+        let isLoading = false; // Flag to check if an image is currently loading
+
         const updateImage = index => {
-    img.src = currentFrame(index);
-    img.onload = function() {
-        canvas.width = window.innerWidth * 2; // Double the resolution
-        canvas.height = window.innerHeight * 2; // Double the resolution
-        drawImageCovered(img, context, canvas.width, canvas.height);
-        document.getElementById('spinner').style.display = 'none';
-    };
-};
+            // Push the current frame index to the queue
+            imageQueue.push(index);
+            loadNextImage(); // Attempt to load the next image
+        };
 
+        const loadNextImage = () => {
+            if (isLoading || imageQueue.length === 0) return; // Exit if already loading or queue is empty
 
-        img.onerror = function() {
-            console.error('Error loading image:', img.src);
+            const index = imageQueue.shift(); // Get the next index from the queue
+            isLoading = true; // Set loading flag
+
+            img.src = currentFrame(index);
+            img.onload = function() {
+                canvas.width = window.innerWidth * 2; // Double the resolution
+                canvas.height = window.innerHeight * 2; // Double the resolution
+                drawImageCovered(img, context, canvas.width, canvas.height);
+                
+                // Check if the spinner element exists before trying to access its style
+                const spinner = document.getElementById('spinner');
+                if (spinner) {
+                    spinner.style.display = 'none'; // Hide the spinner if it exists
+                }
+
+                // Update the current frame index only after the image is loaded
+                currentFrameIndex = index;
+
+                isLoading = false; // Reset loading flag
+                loadNextImage(); // Load the next image in the queue
+            };
+            img.onerror = function() {
+                console.error('Error loading image:', img.src);
+                isLoading = false; // Reset loading flag on error
+                loadNextImage(); // Attempt to load the next image even on error
+            };
         };
 
         function drawImageCovered(img, ctx, canvas_width, canvas_height) {
@@ -145,9 +170,12 @@ const resizeCanvas = () => {
                         Math.floor(scrollFraction * frameCount)
                     );
 
+                    // Only update the image if the frame index has changed
                     if (frameIndex + 1 !== currentFrameIndex) {
-                        currentFrameIndex = frameIndex + 1;
-                        updateImage(currentFrameIndex);
+                        updateImage(frameIndex + 1); // Update to the next frame
+                        
+                        // Preload the next few images to ensure smooth transitions
+                        preloadImages(frameIndex + 2, frameIndex + 4); // Preload the next 2 frames
                     }
 
                     // Fade out the overlay text on scroll
@@ -176,18 +204,19 @@ const resizeCanvas = () => {
 
         window.addEventListener('scroll', handleScroll);
 
-        // Preload the next few frames to make transitions smoother
-        const preloadImages = () => {
-            for (let i = 1; i < frameCount; i++) {
+        // Preload the initial set of images
+        const preloadImages = (startIndex, endIndex) => {
+            for (let i = startIndex; i <= endIndex; i++) {
                 const img = new Image();
                 img.src = currentFrame(i);
             }
         };
 
         // Initial setup
+        const initialPreloadCount = 60; // Number of images to preload initially
+        preloadImages(1, initialPreloadCount); // Preload the first few frames
         resizeCanvas();
         updateImage(currentFrameIndex);
-        preloadImages();
 
         console.log('Script completed');
     </script>
