@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taha's Website v1</title>
+    <title>T's Website v1</title>
     <link href='https://fonts.googleapis.com/css?family=Italianno' rel='stylesheet'>
     <style>
         html, body {
@@ -79,42 +79,23 @@
         const imageQueue = []; // Queue to hold images to be loaded
         let isLoading = false; // Flag to check if an image is currently loading
 
-        const updateImage = index => {
-            // Push the current frame index to the queue
-            imageQueue.push(index);
-            loadNextImage(); // Attempt to load the next image
-        };
+        const loadImage = (index) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = currentFrame(index);
+  });
+};
 
-        const loadNextImage = () => {
-            if (isLoading || imageQueue.length === 0) return; // Exit if already loading or queue is empty
+const updateImage = async (index) => {
+  const lowResImg = await loadImage(index);
+  drawImageCovered(lowResImg, context, canvas.width, canvas.height);
+  
+  const highResImg = await loadImage(index);
+  drawImageCovered(highResImg, context, canvas.width, canvas.height);
+};
 
-            const index = imageQueue.shift(); // Get the next index from the queue
-            isLoading = true; // Set loading flag
-
-            img.src = currentFrame(index);
-            img.onload = function() {
-                canvas.width = window.innerWidth * 2; // Double the resolution
-                canvas.height = window.innerHeight * 2; // Double the resolution
-                drawImageCovered(img, context, canvas.width, canvas.height);
-                
-                // Check if the spinner element exists before trying to access its style
-                const spinner = document.getElementById('spinner');
-                if (spinner) {
-                    spinner.style.display = 'none'; // Hide the spinner if it exists
-                }
-
-                // Update the current frame index only after the image is loaded
-                currentFrameIndex = index;
-
-                isLoading = false; // Reset loading flag
-                loadNextImage(); // Load the next image in the queue
-            };
-            img.onerror = function() {
-                console.error('Error loading image:', img.src);
-                isLoading = false; // Reset loading flag on error
-                loadNextImage(); // Attempt to load the next image even on error
-            };
-        };
 
         function drawImageCovered(img, ctx, canvas_width, canvas_height) {
     const imgRatio = img.width / img.height;
@@ -156,61 +137,65 @@ const resizeCanvas = () => {
 
         const topBar = document.getElementById('topBar');
 
+        let lastScrollPosition = 0;
 
-        const handleScroll = () => {
-            lastKnownScrollPosition = html.scrollTop;
-            scrollVelocity = lastKnownScrollPosition - (scrollVelocity * inertiaFactor);
+const updateScrollAnimation = () => {
+  const currentScrollPosition = window.scrollY;
+  if (currentScrollPosition !== lastScrollPosition) {
+    const maxScrollTop = html.scrollHeight - window.innerHeight;
+    const scrollFraction = currentScrollPosition / maxScrollTop;
+    const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
+    
+    if (frameIndex + 1 !== currentFrameIndex) {
+      updateImage(frameIndex + 1);
+    }
+    
+    // Fade out overlay and handle blur effect
+    const overlay = document.getElementById('overlay');
+    overlay.style.opacity = Math.max(0, 1 - scrollFraction * (frameCount / 17));
+    
+    if (frameIndex >= 17) {
+      topBar.classList.add('blur');
+    } else {
+      topBar.classList.remove('blur');
+    }
+    
+    // Handle end message
+    if (currentScrollPosition >= maxScrollTop) {
+      document.getElementById('endMessage').style.display = 'block';
+    } else {
+      document.getElementById('endMessage').style.display = 'none';
+    }
+    
+    lastScrollPosition = currentScrollPosition;
+  }
+  ticking = false;
+};
 
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const maxScrollTop = html.scrollHeight - window.innerHeight;
-                    const scrollFraction = lastKnownScrollPosition / maxScrollTop;
-                    const frameIndex = Math.min(
-                        frameCount - 1,
-                        Math.floor(scrollFraction * frameCount)
-                    );
+const handleScroll = () => {
+  if (!ticking) {
+    requestAnimationFrame(updateScrollAnimation);
+    ticking = true;
+  }
+};
 
-                    // Only update the image if the frame index has changed
-                    if (frameIndex + 1 !== currentFrameIndex) {
-                        updateImage(frameIndex + 1); // Update to the next frame
-                        
-                        // Preload the next few images to ensure smooth transitions
-                        preloadImages(frameIndex + 2, frameIndex + 4); // Preload the next 2 frames
-                    }
+window.addEventListener('scroll', handleScroll);
 
-                    // Fade out the overlay text on scroll
-                    const overlay = document.getElementById('overlay');
-                    overlay.style.opacity = Math.max(0, 1 - scrollFraction * (frameCount / 17));
 
-                    // Add or remove blur class based on scroll position
-                    if (frameIndex >= 17) {
-                        topBar.classList.add('blur');
-                    } else {
-                        topBar.classList.remove('blur');
-                    }
+window.addEventListener('scroll', handleScroll);
 
-                    // Check if the user has scrolled to the bottom
-                    if (lastKnownScrollPosition >= maxScrollTop) {
-                        document.getElementById('endMessage').style.display = 'block'; // Show the end message
-                    } else {
-                        document.getElementById('endMessage').style.display = 'none'; // Hide the end message
-                    }
-
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        };
 
         window.addEventListener('scroll', handleScroll);
 
         // Preload the initial set of images
-        const preloadImages = (startIndex, endIndex) => {
+        const preloadImages = async (startIndex, endIndex) => {
+            const promises = [];
             for (let i = startIndex; i <= endIndex; i++) {
-                const img = new Image();
-                img.src = currentFrame(i);
+                promises.push(loadImage(i));
             }
+            await Promise.all(promises);
         };
+
 
         // Initial setup
         const initialPreloadCount = 60; // Number of images to preload initially
