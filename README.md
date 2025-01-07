@@ -10,7 +10,6 @@ An interactive and visually appealing personal webpage featuring smooth scroll a
 - **End Message**: A footer message appears when the user reaches the bottom of the page, linking to the store and showing the current version.
 
 ### Prerequisites
-NONE basically
 
 To run this project locally, you’ll need:
 - A modern web browser (Chrome, Firefox, Safari, or Edge)
